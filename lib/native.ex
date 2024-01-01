@@ -1,4 +1,4 @@
-defmodule Silicon do
+defmodule Elixir.Silicon.Native do
   alias Silicon.FormatOptions
   use Rustler, otp_app: :silicon, crate: "silicon_nif"
 
