@@ -2,9 +2,13 @@
 //  License, v. 2.0. If a copy of the MPL was not distributed with this
 //  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use rustler::{lazy_static, Binary, Env, NewBinary, NifResult, NifStruct, NifTaggedEnum};
+use image::{DynamicImage, EncodableLayout};
+use rustler::{
+    lazy_static, Binary, Env, NewBinary, NifResult, NifStruct, NifTaggedEnum, OwnedBinary,
+};
 use std::error::Error;
-use std::fmt;
+use std::io::Cursor;
+use std::{fmt, mem};
 
 use silicon::assets::HighlightingAssets;
 use silicon::formatter::ImageFormatterBuilder;
@@ -84,24 +88,6 @@ struct FormatOptions {
     image_options: Option<ImageOptions>,
 }
 
-#[derive(Debug, Clone)]
-struct UnknownLang;
-impl Error for UnknownLang {}
-impl fmt::Display for UnknownLang {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Unknown language")
-    }
-}
-
-#[derive(Debug, Clone)]
-struct UnknownTheme;
-impl Error for UnknownTheme {}
-impl fmt::Display for UnknownTheme {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Unknown theme")
-    }
-}
-
 struct Wrapper<T>(T);
 
 impl<T> Wrapper<T> {
@@ -159,19 +145,19 @@ fn format(
     env: Env<'_>,
     code: String,
     mut options: FormatOptions,
-) -> Result<Binary<'_>, Box<dyn Error>> {
+) -> Result<DynamicImage, Box<dyn Error>> {
     options.image_options.as_mut().unwrap().font = Some(vec![("Hack".to_string(), 26.0)]);
 
     let syntax = HIGHLIGHTING_ASSETS
         .syntax_set
         .find_syntax_by_token(options.lang.as_str())
-        .ok_or(UnknownLang)?;
+        .ok_or::<Box<dyn Error>>("Unknown lang".into())?;
 
     let theme = HIGHLIGHTING_ASSETS
         .theme_set
         .themes
         .get(options.theme.as_str())
-        .ok_or(UnknownTheme)?;
+        .ok_or::<Box<dyn Error>>("Unknown theme".into())?;
 
     let mut h = HighlightLines::new(syntax, theme);
     let highlight = LinesWithEndings::from(code.as_str())
@@ -186,15 +172,39 @@ fn format(
     let mut formatter = image_builder.build()?;
 
     let image = formatter.format(&highlight, theme);
-    let image_slice = image.as_bytes();
 
-    let mut out_binary = NewBinary::new(env, image_slice.len());
-    out_binary.as_mut_slice().copy_from_slice(image_slice);
-    Ok(out_binary.into())
+    Ok(image)
 }
 
 #[rustler::nif]
-fn nif_format(env: Env<'_>, code: String, options: FormatOptions) -> NifResult<Binary<'_>> {
-    format(env, code, options).map_err(|err| rustler::Error::Term(Box::new(err.to_string())))
+fn nif_format_png(env: Env<'_>, code: String, options: FormatOptions) -> NifResult<Binary<'_>> {
+    let mut bytes: Vec<u8> = Vec::new();
+
+    format(env, code, options)
+        .and_then(|image| {
+            image.write_to(&mut Cursor::new(&mut bytes), image::ImageOutputFormat::Png)?;
+            let mut out_binary = NewBinary::new(env, bytes.len());
+            out_binary.as_mut_slice().copy_from_slice(bytes.as_bytes());
+
+            Ok(out_binary.into())
+        })
+        .map_err(|err| rustler::Error::Term(Box::new(err.to_string())))
 }
-rustler::init!("Elixir.Silicon.Native", [nif_format]);
+
+#[rustler::nif]
+fn nif_format_rgba8(env: Env<'_>, code: String, options: FormatOptions) -> NifResult<Binary<'_>> {
+
+
+    format(env, code, options)
+        .and_then(|image| {
+            let rgba8 = image
+                .as_rgba8()
+                .ok_or::<Box<dyn Error>>("Underlying library returned non-rgba image".into())?;
+            let image_slice = rgba8.as_bytes();
+            let mut out_binary = NewBinary::new(env, image_slice.len());
+            out_binary.as_mut_slice().copy_from_slice(image_slice);
+            Ok(Binary::from(out_binary))
+        })
+        .map_err(|err| rustler::Error::Term(Box::new(err.to_string())))
+}
+rustler::init!("Elixir.Silicon.Native", [nif_format_png, nif_format_rgba8]);
