@@ -4,11 +4,11 @@
 defmodule Silicon.FormatOptions do
   @type t :: %__MODULE__{
           lang: String.t(),
-          font: String.t(),
+          theme: String.t(),
           image_options: Silicon.ImageOptions.t() | nil
         }
 
-  defstruct [:lang, :font, :image_options]
+  defstruct [:lang, :theme, :image_options]
 end
 
 defmodule Silicon.ImageOptions do

@@ -80,7 +80,7 @@ struct ImageOptions {
 #[module = "Silicon.FormatOptions"]
 struct FormatOptions {
     lang: String,
-    font: String,
+    theme: String,
     image_options: Option<ImageOptions>,
 }
 
@@ -169,11 +169,10 @@ fn format(
         .find_syntax_by_token(options.lang.as_str())
         .ok_or(UnknownLang)?;
 
-    // let theme = &ts.themes.get(font).ok_or_else(err);
     let theme = HIGHLIGHTING_ASSETS
         .theme_set
         .themes
-        .get(options.font.as_str())
+        .get(options.theme.as_str())
         .ok_or(UnknownTheme)?;
 
     let mut h = HighlightLines::new(syntax, theme);
