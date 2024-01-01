@@ -160,8 +160,6 @@ fn format(
     code: String,
     mut options: FormatOptions,
 ) -> Result<Binary<'_>, Box<dyn Error>> {
-    // options.lang = "rs".to_string();
-    // options.font = "Dracula".to_string();
     options.image_options.as_mut().unwrap().font = Some(vec![("Hack".to_string(), 26.0)]);
 
     let syntax = HIGHLIGHTING_ASSETS
