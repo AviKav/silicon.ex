@@ -21,9 +21,9 @@ struct Rgba {
     a: u8,
 }
 
-impl Into<image::Rgba<u8>> for Rgba {
-    fn into(self) -> image::Rgba<u8> {
-        let Rgba { r, g, b, a } = self;
+impl From<Rgba> for image::Rgba<u8> {
+    fn from(val: Rgba) -> Self {
+        let Rgba { r, g, b, a } = val;
         image::Rgba::<u8>([r, g, b, a])
     }
 }
@@ -89,6 +89,15 @@ impl fmt::Display for UnknownLang {
     }
 }
 
+#[derive(Debug, Clone)]
+struct UnknownTheme;
+impl Error for UnknownTheme {}
+impl fmt::Display for UnknownTheme {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Unknown theme")
+    }
+}
+
 struct Wrapper<T>(T);
 
 impl<T> Wrapper<T> {
@@ -142,11 +151,11 @@ fn do_shadow<T: AsRef<str> + Default>(
     format_builder.shadow_adder(shadow_builder)
 }
 
-fn format<'a>(
-    env: Env<'a>,
+fn format(
+    env: Env<'_>,
     code: String,
     mut options: FormatOptions,
-) -> Result<Binary<'a>, Box<dyn Error>> {
+) -> Result<Binary<'_>, Box<dyn Error>> {
     options.lang = "rs".to_string();
     options.font = "Dracula".to_string();
     options.image_options.as_mut().unwrap().font = Some(vec![("Hack".to_string(), 26.0)]);
@@ -157,7 +166,11 @@ fn format<'a>(
         .ok_or(UnknownLang)?;
 
     // let theme = &ts.themes.get(font).ok_or_else(err);
-    let theme = &HIGHLIGHTING_ASSETS.theme_set.themes[options.font.as_str()]; // TODO: change to .get() to have control over Not Founds
+    let theme = HIGHLIGHTING_ASSETS
+        .theme_set
+        .themes
+        .get(options.font.as_str())
+        .ok_or(UnknownTheme)?;
 
     let mut h = HighlightLines::new(syntax, theme);
     let highlight = LinesWithEndings::from(code.as_str())
@@ -180,7 +193,7 @@ fn format<'a>(
 }
 
 #[rustler::nif]
-fn nif_format<'a>(env: Env<'a>, code: String, options: FormatOptions) -> NifResult<Binary<'a>> {
+fn nif_format(env: Env<'_>, code: String, options: FormatOptions) -> NifResult<Binary<'_>> {
     format(env, code, options).map_err(|err| rustler::Error::Term(Box::new(err.to_string())))
 }
 rustler::init!("Elixir.Silicon.Native", [nif_format]);
