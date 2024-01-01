@@ -3,12 +3,9 @@
 //  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use image::{DynamicImage, EncodableLayout};
-use rustler::{
-    lazy_static, Binary, Env, NewBinary, NifResult, NifStruct, NifTaggedEnum, OwnedBinary,
-};
+use rustler::{lazy_static, Binary, Env, NewBinary, NifResult, NifStruct, NifTaggedEnum};
 use std::error::Error;
 use std::io::Cursor;
-use std::{fmt, mem};
 
 use silicon::assets::HighlightingAssets;
 use silicon::formatter::ImageFormatterBuilder;
@@ -142,7 +139,7 @@ fn do_shadow<T: AsRef<str> + Default>(
 }
 
 fn format(
-    env: Env<'_>,
+    _env: Env<'_>,
     code: String,
     mut options: FormatOptions,
 ) -> Result<DynamicImage, Box<dyn Error>> {
@@ -176,6 +173,10 @@ fn format(
     Ok(image)
 }
 
+fn to_rustler_error(err: Box<dyn Error>) -> rustler::Error {
+    rustler::Error::Term(Box::new(err.to_string()))
+}
+
 #[rustler::nif]
 fn nif_format_png(env: Env<'_>, code: String, options: FormatOptions) -> NifResult<Binary<'_>> {
     let mut bytes: Vec<u8> = Vec::new();
@@ -188,13 +189,11 @@ fn nif_format_png(env: Env<'_>, code: String, options: FormatOptions) -> NifResu
 
             Ok(out_binary.into())
         })
-        .map_err(|err| rustler::Error::Term(Box::new(err.to_string())))
+        .map_err(to_rustler_error)
 }
 
 #[rustler::nif]
 fn nif_format_rgba8(env: Env<'_>, code: String, options: FormatOptions) -> NifResult<Binary<'_>> {
-
-
     format(env, code, options)
         .and_then(|image| {
             let rgba8 = image
@@ -205,6 +204,6 @@ fn nif_format_rgba8(env: Env<'_>, code: String, options: FormatOptions) -> NifRe
             out_binary.as_mut_slice().copy_from_slice(image_slice);
             Ok(Binary::from(out_binary))
         })
-        .map_err(|err| rustler::Error::Term(Box::new(err.to_string())))
+        .map_err(to_rustler_error)
 }
 rustler::init!("Elixir.Silicon.Native", [nif_format_png, nif_format_rgba8]);
