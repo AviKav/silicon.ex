@@ -1,18 +1,7 @@
 defmodule Silicon do
-  @moduledoc """
-  Documentation for `Silicon`.
-  """
+  alias Silicon.FormatOptions
+  use Rustler, otp_app: :silicon, crate: "silicon_nif"
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Silicon.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
+  @spec nif_format(String.t(), FormatOptions.t()) :: binary()
+  def nif_format(_code, _options), do: :erlang.nif_error(:nif_not_loaded)
 end
