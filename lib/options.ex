@@ -95,12 +95,14 @@ end
 
 defmodule Silicon.Options.Format do
   use TypeCheck
+  @type! theme_resource :: reference()
+  @type! theme :: String.t() | theme_resource()
 
-  defstruct [:lang, :image_options, theme: "Dracula"]
+  defstruct [:lang, :theme_set, :image_options, theme: "Dracula"]
 
   @type! t :: %__MODULE__{
            lang: String.t(),
-           theme: String.t(),
+           theme: theme(),
            image_options: Silicon.Options.Image.t() | nil
          }
 end

@@ -5,7 +5,7 @@
 use image::{DynamicImage, EncodableLayout};
 use rustler::{
     lazy_static, Binary, Env, NewBinary, NifResult, NifStruct, NifTaggedEnum,
-    ResourceArc, Term,
+    ResourceArc, Term, NifUntaggedEnum,
 };
 use std::error::Error;
 use std::io::Cursor;
@@ -81,7 +81,7 @@ struct ImageOptions {
     line_offset: Option<u32>,
 }
 
-#[derive(NifTaggedEnum)]
+#[derive(NifUntaggedEnum)]
 enum ThemeEnum {
     Name(String),
     Resource(ResourceArc<ThemeSetResource>),
