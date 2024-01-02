@@ -15,7 +15,7 @@ defmodule Elixir.Silicon.Native do
   def format_rgba8(code, options), do: nif_format_rgba8(code, options)
   def nif_format_rgba8(_code, _options), do: :erlang.nif_error(:nif_not_loaded)
 
-  @spec! load_theme() :: Silicon.Options.Format.theme_resource() | rustler_error()
+  @spec! load_theme(binary()) :: Silicon.Options.Format.theme_resource() | rustler_error()
   def load_theme(resource_binary), do: nif_load_theme(resource_binary)
   def nif_load_theme(_resource_binary), do: :erlang.nif_error(:nif_not_loaded)
 end
