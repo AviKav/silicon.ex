@@ -3,9 +3,13 @@
 //  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use image::{DynamicImage, EncodableLayout};
-use rustler::{lazy_static, Binary, Env, NewBinary, NifResult, NifStruct, NifTaggedEnum};
+use rustler::{
+    lazy_static, Binary, Env, NewBinary, NifResult, NifStruct, NifTaggedEnum,
+    ResourceArc, Term,
+};
 use std::error::Error;
 use std::io::Cursor;
+use syntect::highlighting::{Theme, ThemeSet};
 
 use silicon::assets::HighlightingAssets;
 use silicon::formatter::ImageFormatterBuilder;
@@ -77,12 +81,23 @@ struct ImageOptions {
     line_offset: Option<u32>,
 }
 
+#[derive(NifTaggedEnum)]
+enum ThemeEnum {
+    Name(String),
+    Resource(ResourceArc<ThemeSetResource>),
+}
+
 #[derive(NifStruct)]
 #[module = "Silicon.Options.Format"]
 struct FormatOptions {
     lang: String,
-    theme: String,
+    theme: ThemeEnum,
+    theme_set: Option<ResourceArc<ThemeSetResource>>,
     image_options: Option<crate::ImageOptions>,
+}
+
+struct ThemeSetResource {
+    themes: Theme,
 }
 
 struct Wrapper<T>(T);
@@ -143,16 +158,19 @@ fn format(
     code: String,
     options: FormatOptions,
 ) -> Result<DynamicImage, Box<dyn Error>> {
+    let theme = match options.theme {
+        ThemeEnum::Name(name) => HIGHLIGHTING_ASSETS
+            .theme_set
+            .themes
+            .get(name.as_str())
+            .ok_or::<Box<dyn Error>>("Unknown theme".into())?,
+        ThemeEnum::Resource(ref resource) => &resource.themes,
+    };
+
     let syntax = HIGHLIGHTING_ASSETS
         .syntax_set
         .find_syntax_by_token(options.lang.as_str())
         .ok_or::<Box<dyn Error>>("Unknown lang".into())?;
-
-    let theme = HIGHLIGHTING_ASSETS
-        .theme_set
-        .themes
-        .get(options.theme.as_str())
-        .ok_or::<Box<dyn Error>>("Unknown theme".into())?;
 
     let mut h = HighlightLines::new(syntax, theme);
     let highlight = LinesWithEndings::from(code.as_str())
@@ -166,13 +184,20 @@ fn format(
 
     let mut formatter = image_builder.build()?;
 
-    let image = formatter.format(&highlight, theme);
+    let image = formatter.format(&highlight, &theme);
 
     Ok(image)
 }
 
-fn to_rustler_error(err: Box<dyn Error>) -> rustler::Error {
-    rustler::Error::Term(Box::new(err.to_string()))
+fn to_rustler_error(err: impl Into<Box<dyn Error>>) -> rustler::Error {
+    rustler::Error::Term(Box::new(err.into().to_string()))
+}
+
+#[rustler::nif(schedule = "DirtyCpu")]
+fn load_theme(theme_data: Binary) -> NifResult<ResourceArc<ThemeSetResource>> {
+    let theme_set = ThemeSet::load_from_reader(&mut Cursor::new(theme_data.as_bytes()))
+        .map_err(to_rustler_error)?;
+    Ok(ResourceArc::new(ThemeSetResource { themes: theme_set }))
 }
 
 #[rustler::nif(schedule = "DirtyCpu")]
@@ -204,4 +229,13 @@ fn nif_format_rgba8(env: Env<'_>, code: String, options: FormatOptions) -> NifRe
         })
         .map_err(to_rustler_error)
 }
-rustler::init!("Elixir.Silicon.Native", [nif_format_png, nif_format_rgba8]);
+
+rustler::init!(
+    "Elixir.Silicon.Native",
+    [nif_format_png, nif_format_rgba8],
+    load = load
+);
+fn load(env: Env, _: Term) -> bool {
+    rustler::resource!(ThemeSetResource, env);
+    true
+}
