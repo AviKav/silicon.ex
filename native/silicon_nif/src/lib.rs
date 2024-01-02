@@ -40,7 +40,7 @@ enum Background {
 }
 
 #[derive(Debug, NifStruct)]
-#[module = "Silicon.ShadowOptions"]
+#[module = "Silicon.Options.Shadow"]
 struct ShadowOptions {
     background: Option<Background>,
     shadow_color: Option<Rgba>,
@@ -52,7 +52,7 @@ struct ShadowOptions {
 }
 
 #[derive(Debug, NifStruct)]
-#[module = "Silicon.ImageOptions"]
+#[module = "Silicon.Options.Image"]
 struct ImageOptions {
     /// Pad between lines
     line_pad: Option<u32>,
@@ -78,11 +78,11 @@ struct ImageOptions {
 }
 
 #[derive(NifStruct)]
-#[module = "Silicon.FormatOptions"]
+#[module = "Silicon.Options.Format"]
 struct FormatOptions {
     lang: String,
     theme: String,
-    image_options: Option<ImageOptions>,
+    image_options: Option<crate::ImageOptions>,
 }
 
 struct Wrapper<T>(T);
@@ -141,10 +141,8 @@ fn do_shadow<T: AsRef<str> + Default>(
 fn format(
     _env: Env<'_>,
     code: String,
-    mut options: FormatOptions,
+    options: FormatOptions,
 ) -> Result<DynamicImage, Box<dyn Error>> {
-    options.image_options.as_mut().unwrap().font = Some(vec![("Hack".to_string(), 26.0)]);
-
     let syntax = HIGHLIGHTING_ASSETS
         .syntax_set
         .find_syntax_by_token(options.lang.as_str())

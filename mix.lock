@@ -8,4 +8,5 @@
   "nimble_parsec": {:hex, :nimble_parsec, "1.4.0", "51f9b613ea62cfa97b25ccc2c1b4216e81df970acd8e16e8d1bdc58fef21370d", [:mix], [], "hexpm", "9c565862810fb383e9838c1dd2d7d2c437b3d13b267414ba6af33e50d2d1cf28"},
   "rustler": {:hex, :rustler, "0.30.0", "cefc49922132b072853fa9b0ca4dc2ffcb452f68fb73b779042b02d545e097fb", [:mix], [{:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: false]}, {:toml, "~> 0.6", [hex: :toml, repo: "hexpm", optional: false]}], "hexpm", "9ef1abb6a7dda35c47cfc649e6a5a61663af6cf842a55814a554a84607dee389"},
   "toml": {:hex, :toml, "0.7.0", "fbcd773caa937d0c7a02c301a1feea25612720ac3fa1ccb8bfd9d30d822911de", [:mix], [], "hexpm", "0690246a2478c1defd100b0c9b89b4ea280a22be9a7b313a8a058a2408a2fa70"},
+  "type_check": {:hex, :type_check, "0.13.5", "b41ce95808546e9913d7d56d0886ae8298c4298c9ff596fd7987c5000a2d2316", [:mix], [{:credo, "~> 1.5", [hex: :credo, repo: "hexpm", optional: true]}, {:stream_data, "~> 0.5.0", [hex: :stream_data, repo: "hexpm", optional: true]}], "hexpm", "6196910e3cec69b4e2cec71f8d9f243532aeeb37924a86e8256bc5ee05b3fd00"},
 }
