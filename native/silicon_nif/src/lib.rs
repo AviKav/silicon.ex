@@ -175,7 +175,7 @@ fn to_rustler_error(err: Box<dyn Error>) -> rustler::Error {
     rustler::Error::Term(Box::new(err.to_string()))
 }
 
-#[rustler::nif]
+#[rustler::nif(schedule = "DirtyCpu")]
 fn nif_format_png(env: Env<'_>, code: String, options: FormatOptions) -> NifResult<Binary<'_>> {
     let mut bytes: Vec<u8> = Vec::new();
 
@@ -190,7 +190,7 @@ fn nif_format_png(env: Env<'_>, code: String, options: FormatOptions) -> NifResu
         .map_err(to_rustler_error)
 }
 
-#[rustler::nif]
+#[rustler::nif(schedule = "DirtyCpu")]
 fn nif_format_rgba8(env: Env<'_>, code: String, options: FormatOptions) -> NifResult<Binary<'_>> {
     format(env, code, options)
         .and_then(|image| {
