@@ -3,6 +3,7 @@ defmodule Silicon.MixProject do
 
 
   @description """
+    Elixir wrapper for Rust Silicon crate.
   """
   @version "./VERSION" |> File.read!() |> String.trim()
   @repo_url "https://github.com/AviKav/silicon.ex"
