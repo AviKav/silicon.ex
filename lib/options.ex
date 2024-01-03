@@ -1,7 +1,3 @@
-#  This Source Code Form is subject to the terms of the Mozilla Public
-#  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 defmodule Silicon.Options do
   @moduledoc """
     Option structs have some pre-populated values in order to match the defaults of Silicon the binary.
@@ -10,6 +6,8 @@ end
 
 # Should this be a tuple?
 defmodule Silicon.RGBA do
+  @moduledoc false
+
   use TypeCheck
 
   defstruct [:r, :g, :b, a: 255]
@@ -24,6 +22,8 @@ defmodule Silicon.RGBA do
 end
 
 defmodule Silicon.Options.Shadow do
+  @moduledoc false
+
   use TypeCheck
 
   defstruct background: {:solid, %Silicon.RGBA{r: 0xAA, g: 0xAA, b: 0xFF}},
@@ -51,6 +51,8 @@ defmodule Silicon.Options.Shadow do
 end
 
 defmodule Silicon.Options.Image do
+  @moduledoc false
+
   use TypeCheck
 
   defstruct [
@@ -94,6 +96,8 @@ defmodule Silicon.Options.Image do
 end
 
 defmodule Silicon.Options.Format do
+  @moduledoc false
+
   use TypeCheck
   @type! theme_resource :: reference()
   @type! theme :: String.t() | theme_resource()
