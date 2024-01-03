@@ -1,0 +1,35 @@
+version: 2
+updates:
+  - package-ecosystem: "mix"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      elixir:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      elixir_major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+
+  - package-ecosystem: "cargo"
+    directory: "/native/silicon_nif"
+    schedule:
+      interval: "monthly"
+    groups:
+      rust:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      rust_major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
