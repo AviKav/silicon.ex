@@ -20,9 +20,9 @@ defmodule Silicon.MixProject do
   defp deps do
     [
       {:rustler, "~> 0.30.0", runtime: false},
+      {:type_check, "~> 0.13.3"},
 
       # Developer tooling
-      {:type_check, "~> 0.13.3"},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
