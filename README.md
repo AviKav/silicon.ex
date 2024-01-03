@@ -1,5 +1,7 @@
 # Silicon
 
+Check https://github.com/Aloxaf/silicon for native dependencies
+ 
 **TODO: Add description**
 
 ## Installation
