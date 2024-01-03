@@ -1,10 +1,11 @@
 defmodule Elixir.Silicon.Native do
-  use Rustler, otp_app: :silicon, crate: "silicon_nif"
-  use TypeCheck
-
   @moduledoc """
   Don't use the functions prefixed with `nif_`. The error messages for input validation are bad to misleading.
   """
+
+  use Rustler, otp_app: :silicon, crate: "silicon_nif"
+  use TypeCheck
+
   @type! rustler_error :: any()
 
   @spec! format_png(String.t(), Silicon.Options.Format.t()) :: binary() | rustler_error()
