@@ -6,9 +6,7 @@ case System.get_env("NIF_LOAD_PATH") do
       load_from: {:silicon, nif_path},
       skip_compilation?: true
 
-  nil ->
-    config :silicon, Silicon.Native,
-      skip_compilation?: false
+  nil -> true # Keep default Rustler behaviour
 end
 
 
