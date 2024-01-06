@@ -3,5 +3,7 @@ deps
 .elixir-tools
 .gitignore
 .github
+.git
 priv
 erl_crash.dump
+native/**/target
