@@ -1,0 +1,7 @@
+_build
+deps
+.elixir-tools
+.gitignore
+.github
+priv
+erl_crash.dump
