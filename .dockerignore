@@ -5,5 +5,5 @@ deps
 .github
 .git
 priv
-erl_crash.dump
+**/erl_crash.dump
 native/**/target
