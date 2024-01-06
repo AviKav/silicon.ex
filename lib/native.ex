@@ -6,6 +6,7 @@ defmodule Silicon.Native do
   use Rustler,
     otp_app: :silicon,
     crate: "silicon_nif"
+
   use TypeCheck
 
   @type! rustler_error :: any()
