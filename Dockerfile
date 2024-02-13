@@ -1,5 +1,4 @@
 
-# TODO: Leverage Cargo Chef for Rust to improve dependency caching for Rust.
 # TODO: Add support for building DEV or PROD environment images.
 
 ARG ALPINE_VERSION=3.18
@@ -14,19 +13,30 @@ ARG ELIXIR_BUILDER="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-alpine-
 ARG RUNNER_IMAGE="alpine:${ALPINE_VERSION}"
 
 ########
-# Rust Builder
+# Rust Builder using Cargo Chef
 ########
-FROM ${RUST_BUILDER} as nif
+FROM ${RUST_BUILDER} AS chef
 WORKDIR /usr/src/silicon_nif
+RUN apk add --no-cache musl-dev # Necessary for building _BOTH_ cargo-chef and libsodium NIF
+RUN cargo install cargo-chef
+
+FROM chef AS planner
+COPY native/silicon_nif .
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM planner AS nif
 ENV RUSTFLAGS="-C target-feature=-crt-static"
-RUN apk add --no-cache fontconfig-dev \
-g++ \
-python3 \
-pkgconfig \
-harfbuzz-dev \
-musl-dev;
-COPY ./native/silicon_nif/ .
 ENV CARGO_TARGET_DIR=build
+RUN apk add --no-cache fontconfig-dev \
+    g++ \
+    python3 \
+    pkgconfig \
+    harfbuzz-dev;
+COPY --from=planner /usr/src/silicon_nif/recipe.json recipe.json
+# NOTE: Rust dependencies are built with the chef cook command below, ensure all
+# required Rust NIF compile-time dependencies are installed *BEFORE* this command
+RUN cargo chef cook --release --recipe-path recipe.json
+COPY native/silicon_nif .
 RUN cargo build --release
 
 ########
@@ -49,6 +59,7 @@ FROM ${RUNNER_IMAGE}
 WORKDIR /usr/bin/silicon
 COPY --from=elixir /usr/bin/silicon/release .
 
+# Install Rust NIF runtime dependencies
 RUN apk upgrade --no-cache & apk add --no-cache \
   harfbuzz-dev;
 
